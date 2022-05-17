@@ -30,7 +30,6 @@ class CPU
         public:
             ucontext_t _context;
         };
-
     public:
 
         static void switch_context(Context *from, Context *to);
