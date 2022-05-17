@@ -21,4 +21,10 @@ int Thread::id() {
     return this->_id;
 }
 
+void Thread::dispatcher() {
+    while (thread_count>0){
+        
+    }
+}
+
 __END_API
