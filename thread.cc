@@ -2,7 +2,7 @@
 
 __BEGIN_API
 // Declaração inicial do uid das threads
-int Thread::uid = 0;
+int unsigned Thread::thread_count = 0;
 // Declaração inicial do ponteiro que aponta para thread
 // que está rodando
 Thread* Thread::_running = nullptr;

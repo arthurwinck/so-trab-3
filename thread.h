@@ -99,7 +99,7 @@ private:
     int _id;
     Context * volatile _context;
     static Thread * _running;
-    
+    static unsigned int thread_count; 
     static Thread _main; 
     static CPU::Context _main_context;
     static Thread _dispatcher;
