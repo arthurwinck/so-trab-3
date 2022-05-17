@@ -5,13 +5,13 @@ __BEGIN_API
 int unsigned Thread::thread_count = 0;
 // Declaração inicial do ponteiro que aponta para thread
 // que está rodando
-Thread* Thread::_running = nullptr;
+Thread* Thread::_running = 0;
 
 void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
     //UPDATE: debug = db<>....
     delete this->_context;
-    Thread::uid --;
+    Thread::thread_count --;
 }
 
 /*

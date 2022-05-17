@@ -12,15 +12,26 @@ __BEGIN_API
 
 class CPU; //declaração das classes criadas nos trabalhos devem ser colocadas aqui
 class Debug; //declaração do Debug para que possamos colocar os atributos
+class System;
 
 //declaração da classe Traits
 template<typename T>
 struct Traits {
 };
 // UPDATE: Fazer isso para todas as classes do sistema
+// Declaração para decidir se queremos ver o debug para cada classe
 template<> struct Traits<System> : public Traits<void> {
     static const bool debugged = true;
-}
+};
+
+template<> struct Traits<CPU> : public Traits<void> {
+    static const bool debugged = true;
+};
+
+template<> struct Traits<Thread> : public Traits<void> {
+    static const bool debugged = true;
+};
+
 
 template<> struct Traits<Debug>: public Traits<void>
 {
