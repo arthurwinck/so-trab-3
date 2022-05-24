@@ -30,11 +30,18 @@ class CPU
         public:
             ucontext_t _context;
         };
-
     public:
 
-        static void switch_context(Context *from, Context *to);
-
+        static int CPU::switch_context(Context *from, Context *to) {
+            //implementação do método
+            //salva o primeiro contexto e restaura o segundo
+            if (from && to) {
+                swapcontext(&from->_context, &to->_context);
+                return 0;
+            } else {
+                return -1;
+            }
+        }
 };
 
 //Construtor da classe usando variadic templates

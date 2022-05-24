@@ -12,7 +12,8 @@ __BEGIN_API
 
 class CPU; //declaração das classes criadas nos trabalhos devem ser colocadas aqui
 class Debug; //declaração do Debug para que possamos colocar os atributos
-class System;
+class System; // declaração das classes
+class Thread; //...
 
 //declaração da classe Traits
 template<typename T>
@@ -25,6 +26,7 @@ template<> struct Traits<System> : public Traits<void> {
 };
 
 template<> struct Traits<CPU> : public Traits<void> {
+    static const int STACK_SIZE = 64000;
     static const bool debugged = true;
 };
 
@@ -39,12 +41,6 @@ template<> struct Traits<Debug>: public Traits<void>
     static const bool warning = false;
     static const bool info    = false;
     static const bool trace   = false;
-};
-
-template<> struct Traits<CPU>
-{
-    //Adicionar aqui a declaração do tamanho da Pilha
-    static const int STACK_SIZE = 64000;
 };
 
 __END_API
