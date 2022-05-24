@@ -36,4 +36,10 @@ void Thread::init(void (*main)(void *)) {
     CPU::switch_context(mock_context, main_thread->_context);
 };
 
+void Thread::dispatcher() {
+    while (thread_count>0){
+        
+    }
+}
+
 __END_API

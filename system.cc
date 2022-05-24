@@ -4,8 +4,8 @@
 __BEGIN_API
 //Definição do método init, Header já especifica que é Static
 void System::init(void (*main)(void *)) {
-    Thread::init(main);
     setvbuf (stdout, 0,_IONBF, 0);
+    Thread::init(main);
 }
 
 __END_API
