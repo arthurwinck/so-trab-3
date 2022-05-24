@@ -53,9 +53,8 @@ public:
     static int Thread::switch_context(Thread * prev, Thread * next) {
         db<Thread>(TRC) << "Trocando contexto Thread::switch_context()";
         if (prev && next) {
-            //UPDATE: ORDEM ERRADA, primeiro se troca o _running depois executa switch_context
+            //UPDATE: ORDEM ERRADA, primeiro se troca o _running depois executa switch_context (UPDATE: Fazemos isso em yield())
             // Se for feito do jeito inverso, quando chega em switch_context o código n executa mais 
-            Thread::_running = next;
             CPU::switch_context(prev->_context, next->_context);
             return 0;
         } else {
@@ -94,7 +93,40 @@ public:
      * Devolve o processador para a thread dispatcher que irá escolher outra thread pronta
      * para ser executada.
      */
-    static void yield(); 
+    static void yield() {
+        db<Thread>(TRC) << "Thread iniciou processo de yield";
+        
+        //Validando a thread que está rodando
+        if (Thread::_running->_state != State::FINISHING) {
+            //Thread está terminando, não vamos colocar ela na fila
+            // TODO.... (?)
+        } else if (Thread::_running->id() == 0) {
+            db<Thread>(TRC) << "[Thread Main] iniciou processo de yield";
+            //Essa é a thread main, se ela deu yield quer dizer que nosso programa está terminando 
+            // TODO.... (?)
+        } else {
+            //Inserir a thread que estava rodando novamente na lista de prontos e alterar o seu estado
+            Thread * prev = Thread::_running;
+            prev->_state = State::READY;
+            prev->_link = new Ready_Queue::Element(Thread::_running, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
+            
+            //Remover a próxima thread da fila para colocá-la em execução, mudando seu estado no método switch_context
+            //Na fila temos o tipo ELEMENT, precisamos retirar esse ELEMENT e pegar a thread de dentro dele, usando o object()
+            Ready_Queue::Element* next_element = Thread::_ready.remove_head();
+            Thread* next = next_element->object();
+            //Atualizo o ponteiro _running para a thread que está executando
+            Thread::_running = next;
+            Thread::switch_context(prev, next);
+        }
+        
+        // remove_head retorna um Element
+        Ready_Queue::Element* next_element = _ready.remove_head();
+        // Pego a thread de dentro do elemento
+        Thread* next = next_element->object();
+
+        
+
+    }
 
     /*
      * Destrutor de uma thread. Realiza todo os procedimentos para manter a consistência da classe.
@@ -137,7 +169,7 @@ inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : /* inicialização de
     //Alterar status para ready
     this->_state = State::READY;
     // Preciso realizar a atribuição de new (?) e adicionar o elemento na fila
-    this->_link = new _link(this, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
+    this->_link = new Ready_Queue::Element(this, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
     // Inserir a thread na fila de prontos
     Thread::Ready_Queue::insert(this->_link);
     
