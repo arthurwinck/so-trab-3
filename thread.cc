@@ -29,13 +29,11 @@ void Thread::init(void (*main)(void *)) {
     //Criação de adição de casting para as funções, além de adicionar uma string ao final para obedecer a chamada da função
     Thread* main_thread = new Thread((void(*)(char*)) main, (char*) "Thread Main");
     Thread* dispatcher_thread = new Thread((void(*)(char*))Thread::dispatcher, (char*) "Thread Dispatcher");
-    
+
     //TODO - O que colocar em prev* já que é a primeira thread a rodar?
     // Troca de CONTEXTO, criação de um contexto vazio para realizar a troca
     Context* mock_context = new CPU::Context();
     CPU::switch_context(mock_context, main_thread->_context);
 };
-
-
 
 __END_API

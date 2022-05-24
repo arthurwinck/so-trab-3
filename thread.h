@@ -50,8 +50,18 @@ public:
      * Deve encapsular a chamada para a troca de contexto realizada pela class CPU.
      * Valor de retorno é negativo se houve erro, ou zero.
      */ 
-    static int switch_context(Thread * prev, Thread * next);
-
+    static int Thread::switch_context(Thread * prev, Thread * next) {
+        db<Thread>(TRC) << "Trocando contexto Thread::switch_context()";
+        if (prev && next) {
+            //UPDATE: ORDEM ERRADA, primeiro se troca o _running depois executa switch_context
+            // Se for feito do jeito inverso, quando chega em switch_context o código n executa mais 
+            Thread::_running = next;
+            CPU::switch_context(prev->_context, next->_context);
+            return 0;
+        } else {
+            return -1;
+        }
+    }
     /*
      * Termina a thread.
      * exit_code é o código de término devolvido pela tarefa (ignorar agora, vai ser usado mais tarde).
@@ -117,8 +127,21 @@ template<typename ... Tn>
 inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : /* inicialização de _link */
 {
     //IMPLEMENTAÇÃO DO CONSTRUTOR
+    //UPDATE: Chamada do debugger
+    db<Thread>(TRC) << "Thread::Thread(): criou thread";
+    //Criação do Contexto...
+    this->_context = new CPU::Context(entry, an...);
+    //... Outras inicializações
+    // Incremento o valor de id para gerar um novo id para a thread (Update para não usar getter)
+    this->_id = Thread::uid ++;
+    //Alterar status para ready
+    this->_state = State::READY;
+    // Preciso realizar a atribuição de new (?) e adicionar o elemento na fila
+    this->_link = new _link(this, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
+    // Inserir a thread na fila de prontos
+    Thread::Ready_Queue::insert(this->_link);
+    
 }
-
 __END_API
 
 #endif
