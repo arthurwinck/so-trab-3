@@ -14,6 +14,7 @@ void Thread::thread_exit(int exit_code) {
     //UPDATE: debug = db<>....
     delete this->_context;
     Thread::thread_count --;
+    
 }
 
 /*
@@ -37,9 +38,31 @@ void Thread::init(void (*main)(void *)) {
 };
 
 void Thread::dispatcher() {
-    while (thread_count>0){
+    db<Thread>(TRC) << "Thread dispatcher iniciou execução";
+    //TODO:Ajustes de sintaxe/
+    while (thread_count>0){ //Enquanto ouverem Threads de usuário//
+        Thread* next_thread = Thread::Ready_Queue::begin(); //Next_thread=Cabeça da Fila de Threads
+        (Thread::_dispatcher)->_state= State::READY; //Estado da next_thread alterado para ready
+        Thread::Ready_Queue::insert(Thread::_dispatcher); //Insere dispatcher no Ready_Queue
         
-    }
+        //Definir a next_thread como a thread rodando
+        Thread::_running= next_thread; 
+        next_thread->_state = State::RUNNING;
+        CPU::switch_context(/*TODO:inserir contexto atual*/,next_thread->_context);
+        //remover next_thread da fila se tiver acabdo
+        if (next_thread->_state == State::FINISHING){
+            Thread::Ready_Queue::remove_head();
+        }
+
+    };
+    (Thread_::_dispatcher)->_state = State::FINISHING; //Dispatcher em finishing
+    Thread::Ready_Queue::remove(Thread->_link); //Remove dispatcher da fila
+    //TODO:ver como referenciar para main thread
+    CPU::switch_context((Thread::_dispatcher), main_thread); //Troca de contexto para main
+
+
+
+
 }
 
 __END_API

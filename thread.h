@@ -128,6 +128,7 @@ public:
 
     }
 
+
     /*
      * Destrutor de uma thread. Realiza todo os procedimentos para manter a consistência da classe.
      */ 
