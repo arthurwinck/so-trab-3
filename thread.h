@@ -108,7 +108,9 @@ public:
             //Inserir a thread que estava rodando novamente na lista de prontos e alterar o seu estado
             Thread * prev = Thread::_running;
             prev->_state = State::READY;
-            prev->_link = new Ready_Queue::Element(Thread::_running, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
+            
+            //prev->_link = prev->_link(Thread::_running, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
+            //Ver como eu fiz na construção do método, como chamar ele no yield?
             
             //Remover a próxima thread da fila para colocá-la em execução, mudando seu estado no método switch_context
             //Na fila temos o tipo ELEMENT, precisamos retirar esse ELEMENT e pegar a thread de dentro dele, usando o object()
@@ -157,7 +159,7 @@ private:
 };
 
 template<typename ... Tn>
-inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : /* inicialização de _link */
+inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : _link(this, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()))
 {
     //IMPLEMENTAÇÃO DO CONSTRUTOR
     //UPDATE: Chamada do debugger
@@ -170,7 +172,6 @@ inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : /* inicialização de
     //Alterar status para ready
     this->_state = State::READY;
     // Preciso realizar a atribuição de new (?) e adicionar o elemento na fila
-    this->_link = new Ready_Queue::Element(this, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
     // Inserir a thread na fila de prontos
     Thread::Ready_Queue::insert(this->_link);
     
