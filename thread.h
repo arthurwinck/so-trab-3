@@ -110,7 +110,8 @@ public:
             prev->_state = State::READY;
             
             //prev->_link = prev->_link(Thread::_running, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
-            //Ver como eu fiz na construção do método, como chamar ele no yield?
+            //Como atualizar aqui a data do elemento?
+            //prev->_link.rank()
             
             //Remover a próxima thread da fila para colocá-la em execução, mudando seu estado no método switch_context
             //Na fila temos o tipo ELEMENT, precisamos retirar esse ELEMENT e pegar a thread de dentro dele, usando o object()
