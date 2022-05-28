@@ -12,7 +12,7 @@ public:
     /*
      * Este método irá realizar a inicialização de todas as variáveis internas do SO.
      */ 
-    static void System::init(void (*main)(void *));
+    static void init(void (*main)(void *));
 
 };
 

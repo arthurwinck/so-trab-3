@@ -1,4 +1,4 @@
-OBJS= main.cc cpu.cc cpu.h main_class.h main_class.cc traits.h debug.h debug.cc system.cc system.h thread.h thread.cc
+OBJS= main.cc cpu.cc cpu.h main_class.h main_class.cc traits.h debug.h debug.cc system.cc system.h thread.h thread.cc list.h 
 OBJ_NAME = main
 CC= g++
 

@@ -50,13 +50,20 @@ public:
      * Deve encapsular a chamada para a troca de contexto realizada pela class CPU.
      * Valor de retorno é negativo se houve erro, ou zero.
      */ 
-    static int Thread::switch_context(Thread * prev, Thread * next) {
+    static int switch_context(Thread * prev, Thread * next) {
         db<Thread>(TRC) << "Trocando contexto Thread::switch_context()";
         if (prev && next) {
             //UPDATE: ORDEM ERRADA, primeiro se troca o _running depois executa switch_context (UPDATE: Fazemos isso em yield())
             // Se for feito do jeito inverso, quando chega em switch_context o código n executa mais 
-            CPU::switch_context(prev->_context, next->_context);
-            return 0;
+            int result = CPU::switch_context(prev->_context, next->_context);
+            
+            // Se eu não conseguir realizar switch_context da CPU, aviso que deu ruim
+            if (result) {
+                return 0;
+            } else {
+                return -1;
+            }
+
         } else {
             return -1;
         }
@@ -95,40 +102,35 @@ public:
      */
     static void yield() {
         db<Thread>(TRC) << "Thread iniciou processo de yield";
-        
+        Thread * prev = Thread::_running;
+
         //Validando a thread que está rodando
-        if (Thread::_running->_state != State::FINISHING) {
+        if (prev->_state != State::FINISHING) {
+            db<Thread>(TRC) << "Thread que estava rodando está terminando";
             //Thread está terminando, não vamos colocar ela na fila
             // TODO.... (?)
-        } else if (Thread::_running->id() == 0) {
+        } else if (prev->id() == 0) {
             db<Thread>(TRC) << "[Thread Main] iniciou processo de yield";
             //Essa é a thread main, se ela deu yield quer dizer que nosso programa está terminando 
             // TODO.... (?)
         } else {
-            //Inserir a thread que estava rodando novamente na lista de prontos e alterar o seu estado
-            Thread * prev = Thread::_running;
+            db<Thread>(TRC) << "Thread será recolocada na fila";
+            // Atualizar o estado da thread que terminou a execução            
             prev->_state = State::READY;
-            
-            //prev->_link = prev->_link(Thread::_running, (std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count()));
-            //Como atualizar aqui a data do elemento?
-            //prev->_link.rank()
-            
+            int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+            prev->_link.rank(now);
             //Remover a próxima thread da fila para colocá-la em execução, mudando seu estado no método switch_context
             //Na fila temos o tipo ELEMENT, precisamos retirar esse ELEMENT e pegar a thread de dentro dele, usando o object()
-            Ready_Queue::Element* next_element = Thread::_ready.remove_head();
-            Thread* next = next_element->object();
-            //Atualizo o ponteiro _running para a thread que está executando
-            Thread::_running = next;
-            Thread::switch_context(prev, next);
         }
         
-        // remove_head retorna um Element
-        Ready_Queue::Element* next_element = _ready.remove_head();
-        // Pego a thread de dentro do elemento
+        // Busca o primeiro elemento da lista, a próxima thread que irá executar
+        Ready_Queue::Element* next_element = _ready.begin();
+        // Pegar a thread de dentro do elemento
         Thread* next = next_element->object();
-
-        
-
+        //Atualizar o ponteiro _running para a thread que está executando
+        Thread::_running = next;
+        // Chamada de switch context para a thread que deu yield e a thread que irá executar
+        Thread::switch_context(prev, next);
     }
 
 
@@ -169,12 +171,12 @@ inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : _link(this, (std::chr
     this->_context = new CPU::Context(entry, an...);
     //... Outras inicializações
     // Incremento o valor de id para gerar um novo id para a thread (Update para não usar getter)
-    this->_id = Thread::uid ++;
+    this->_id = Thread::thread_count ++;
     //Alterar status para ready
     this->_state = State::READY;
     // Preciso realizar a atribuição de new (?) e adicionar o elemento na fila
     // Inserir a thread na fila de prontos
-    Thread::Ready_Queue::insert(this->_link);
+    Thread::_ready.insert(&this->_link);
     
 }
 __END_API

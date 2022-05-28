@@ -32,7 +32,7 @@ class CPU
         };
     public:
 
-        static int CPU::switch_context(Context *from, Context *to) {
+        static int switch_context(Context *from, Context *to) {
             //implementação do método
             //salva o primeiro contexto e restaura o segundo
             if (from && to) {
