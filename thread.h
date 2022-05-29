@@ -101,21 +101,21 @@ public:
      * para ser executada.
      */
     static void yield() {
-        db<Thread>(TRC) << "Thread iniciou processo de yield";
+        db<Thread>(TRC) << "Thread iniciou processo de yield\n";
         Thread * prev = Thread::_running;
 
         //Validando a thread que está rodando
         if (prev->_state != State::FINISHING) {
-            db<Thread>(TRC) << "Thread que estava rodando está terminando";
+            db<Thread>(TRC) << "Thread que estava rodando está terminando\n";
             //Thread está terminando, não vamos colocar ela na fila
             // TODO.... (?)
         } else if (prev->id() == 0) {
-            db<Thread>(TRC) << "[Thread Main] iniciou processo de yield";
+            db<Thread>(TRC) << "[Thread Main] iniciou processo de yield\n";
             //Essa é a thread main, se ela deu yield quer dizer que nosso programa está terminando 
             // TODO.... (?)
             // Desalocar a memória de todos os atributos da classe Thread e afins
         } else {
-            db<Thread>(TRC) << "Thread será recolocada na fila";
+            db<Thread>(TRC) << "Thread será recolocada na fila\n";
             // Atualizar o estado da thread que terminou a execução            
             prev->_state = State::READY;
             int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -167,7 +167,7 @@ inline Thread::Thread(void (* entry)(Tn ...), Tn ... an) : _link(this, (std::chr
 {
     //IMPLEMENTAÇÃO DO CONSTRUTOR
     //UPDATE: Chamada do debugger
-    db<Thread>(TRC) << "Thread::Thread(): criou thread";
+    db<Thread>(TRC) << "Thread::Thread(): criou thread\n";
     //Criação do Contexto...
     this->_context = new CPU::Context(entry, an...);
     //... Outras inicializações

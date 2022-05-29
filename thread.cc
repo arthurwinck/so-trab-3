@@ -15,7 +15,7 @@ CPU::Context Thread::_main_context;
 
 void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
-    db<Thread>(TRC) << "Método thread_exit iniciou execução";
+    db<Thread>(TRC) << "Método thread_exit iniciou execução\n";
     delete this->_context;
     Thread::thread_count --;
     
@@ -29,7 +29,7 @@ int Thread::id() {
 };
 
 void Thread::init(void (*main)(void *)) {
-    db<Thread>(TRC) << "Método Thread::init iniciou execução";
+    db<Thread>(TRC) << "Método Thread::init iniciou execução\n";
 
     //Criação de adição de casting para as funções, além de adicionar uma string ao final para obedecer a chamada da função
 
@@ -47,13 +47,17 @@ void Thread::init(void (*main)(void *)) {
     //Inicialização do atributo contexto
     Thread::_main_context = *Thread::_main._context;
 
+    //Atualização do _running para main
+    Thread::_running = main_thread;
+
+
     // Troca de CONTEXTO, criação de um contexto vazio para realizar a troca
     Context* mock_context = new CPU::Context();
     CPU::switch_context(mock_context, main_thread->_context);
 };
 
 void Thread::dispatcher() {
-    db<Thread>(TRC) << "Thread dispatcher iniciou execução";
+    db<Thread>(TRC) << "Thread dispatcher iniciou execução\n";
     //TODO:Ajustes de sintaxe/
     while (thread_count>0){ //Enquanto ouverem Threads de usuário//
         
