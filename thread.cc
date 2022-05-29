@@ -3,11 +3,15 @@
 
 __BEGIN_API
 
-// Declaração inicial do uid das threads
+// Declaração inicial dos atributos dda classe
 int unsigned Thread::thread_count = 0;
-// Declaração inicial do ponteiro que aponta para thread
-// que está rodando
 Thread* Thread::_running = 0;
+Thread Thread::_dispatcher;
+Thread Thread::_main;
+Thread::Ready_Queue Thread::_ready;
+CPU::Context Thread::_main_context;
+
+//Thread::Ready_Queue Thread::_ready = new Thread::Ready_Queue();
 
 void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
@@ -28,8 +32,20 @@ void Thread::init(void (*main)(void *)) {
     db<Thread>(TRC) << "Método Thread::init iniciou execução";
 
     //Criação de adição de casting para as funções, além de adicionar uma string ao final para obedecer a chamada da função
+
+    //Preciso incrementar o thread_count aqui?
     Thread* main_thread = new Thread((void(*)(char*)) main, (char*) "Thread Main");
-    Thread* dispatcher_thread = new Thread((void(*)(char*))Thread::dispatcher, (char*) "Thread Dispatcher");
+    Thread* dispatcher_thread = new Thread((void(*)(char*)) Thread::dispatcher, (char*) "Thread Dispatcher");
+    
+    // Inicialização dos atributos _dispatcher e _main
+    Thread::_dispatcher = *dispatcher_thread;
+    Thread::_main = *main_thread;
+
+    //Inicialização do atributo lista _ready
+    Thread::_ready = Thread::Ready_Queue();
+
+    //Inicialização do atributo contexto
+    Thread::_main_context = *Thread::_main._context;
 
     // Troca de CONTEXTO, criação de um contexto vazio para realizar a troca
     Context* mock_context = new CPU::Context();
@@ -62,6 +78,13 @@ void Thread::dispatcher() {
     Thread::_ready.remove(&Thread::_dispatcher._link); //Remover dispatcher da fila
     CPU::switch_context(Thread::_dispatcher._context, &Thread::_main_context); //Troca de contexto para main
 
+}
+
+//Destrutor da classe
+Thread::~Thread() {
+    if (this->_context) {
+        delete this->_context;
+    }
 }
 
 __END_API

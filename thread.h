@@ -113,6 +113,7 @@ public:
             db<Thread>(TRC) << "[Thread Main] iniciou processo de yield";
             //Essa é a thread main, se ela deu yield quer dizer que nosso programa está terminando 
             // TODO.... (?)
+            // Desalocar a memória de todos os atributos da classe Thread e afins
         } else {
             db<Thread>(TRC) << "Thread será recolocada na fila";
             // Atualizar o estado da thread que terminou a execução            

@@ -22,8 +22,8 @@ CPU::Context::~Context()
 {
     //adicionar implementação
     //chamado quando o contexto é deletado no final de main
-    free(_context.uc_stack.ss_sp); //remove alocação para stack
-    free(_context.uc_link); //remove valor para executar ao retornar de makecontext
+    //free(_context.uc_stack.ss_sp); //remove alocação para stack
+    //free(_context.uc_link); //remove valor para executar ao retornar de makecontext
 
     //Update para a destruição da stack
     if (this->_stack) {
