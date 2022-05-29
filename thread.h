@@ -105,7 +105,7 @@ public:
         Thread * prev = Thread::_running;
 
         //Validando a thread que está rodando
-        if (prev->_state != State::FINISHING) {
+        if (prev->_state == State::FINISHING) {
             db<Thread>(TRC) << "Thread que estava rodando está terminando\n";
 
             //Thread está terminando, não vamos colocar ela na fila
@@ -131,6 +131,8 @@ public:
         //Thread* next = next_element->object();
         //Atualizar o ponteiro _running para a thread que está executando
         Thread::_running = &_dispatcher;
+        Thread::_dispatcher._state = State::RUNNING;
+        Thread::_ready.remove(&Thread::_dispatcher._link);
         // Chamada de switch context para a thread que deu yield e a thread que irá executar
         Thread::switch_context(prev, &_dispatcher);
     }

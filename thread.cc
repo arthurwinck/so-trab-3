@@ -60,7 +60,7 @@ void Thread::dispatcher() {
     //TODO:Ajustes de sintaxe/
     while (thread_count>0){ //Enquanto ouverem Threads de usuário//
         
-        
+        db<Thread>(TRC) << "Thread dispatcher vai escolher uma nova thread\n";
         Ready_Queue::Element* next_element = Thread::_ready.head(); 
         Thread* next_thread = next_element->object(); // Pegar o objeto Thread de dentro do elemento
         Thread::_dispatcher._state = State::READY; //Estado da next_thread alterado para ready
@@ -71,7 +71,7 @@ void Thread::dispatcher() {
         //remover next_thread da fila se tiver acabdo
         CPU::switch_context(Thread::_dispatcher._context, next_thread->_context);
         if (next_thread->_state == State::FINISHING){
-            Thread::_ready.remove_head();
+            Thread::_ready.remove(next_element);
         }
     };
 
