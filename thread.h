@@ -51,7 +51,7 @@ public:
      * Valor de retorno é negativo se houve erro, ou zero.
      */ 
     static int switch_context(Thread * prev, Thread * next) {
-        db<Thread>(TRC) << "Trocando contexto Thread::switch_context()";
+        db<Thread>(TRC) << "Trocando contexto Thread::switch_context()\n";
         if (prev && next) {
             //UPDATE: ORDEM ERRADA, primeiro se troca o _running depois executa switch_context (UPDATE: Fazemos isso em yield())
             // Se for feito do jeito inverso, quando chega em switch_context o código n executa mais 
@@ -107,6 +107,7 @@ public:
         //Validando a thread que está rodando
         if (prev->_state != State::FINISHING) {
             db<Thread>(TRC) << "Thread que estava rodando está terminando\n";
+
             //Thread está terminando, não vamos colocar ela na fila
             // TODO.... (?)
         } else if (prev->id() == 0) {
@@ -125,13 +126,13 @@ public:
         }
         
         // Busca o primeiro elemento da lista, a próxima thread que irá executar
-        Ready_Queue::Element* next_element = _ready.begin();
+        //Ready_Queue::Element* next_element = _ready.head();
         // Pegar a thread de dentro do elemento
-        Thread* next = next_element->object();
+        //Thread* next = next_element->object();
         //Atualizar o ponteiro _running para a thread que está executando
-        Thread::_running = next;
+        Thread::_running = &_dispatcher;
         // Chamada de switch context para a thread que deu yield e a thread que irá executar
-        Thread::switch_context(prev, next);
+        Thread::switch_context(prev, &_dispatcher);
     }
 
 

@@ -16,9 +16,8 @@ CPU::Context Thread::_main_context;
 void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
     db<Thread>(TRC) << "Método thread_exit iniciou execução\n";
-    delete this->_context;
+    this->_state = State::FINISHING;
     Thread::thread_count --;
-    
 }
 
 /*
@@ -70,17 +69,16 @@ void Thread::dispatcher() {
         Thread::_running= next_thread; 
         next_thread->_state = State::RUNNING;
         //remover next_thread da fila se tiver acabdo
+        CPU::switch_context(Thread::_dispatcher._context, next_thread->_context);
         if (next_thread->_state == State::FINISHING){
             Thread::_ready.remove_head();
         }
-
-        CPU::switch_context(Thread::_dispatcher._context,next_thread->_context);
- 
     };
 
     Thread::_dispatcher._state = State::FINISHING; //Dispatcher em finishing
     Thread::_ready.remove(&Thread::_dispatcher._link); //Remover dispatcher da fila
-    CPU::switch_context(Thread::_dispatcher._context, &Thread::_main_context); //Troca de contexto para main
+
+    CPU::switch_context(Thread::_dispatcher._context, Thread::_main._context); //Troca de contexto para main
 
 }
 
