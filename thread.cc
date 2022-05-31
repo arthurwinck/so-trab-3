@@ -3,21 +3,25 @@
 
 __BEGIN_API
 
-// Declaração inicial dos atributos dda classe
+// Declaração inicial do uid das threads
 int unsigned Thread::thread_count = 0;
+// Declaração inicial do ponteiro que aponta para thread
+// que está rodando
 Thread* Thread::_running = 0;
-Thread Thread::_dispatcher;
-Thread Thread::_main;
 Thread::Ready_Queue Thread::_ready;
-CPU::Context Thread::_main_context;
-
-//Thread::Ready_Queue Thread::_ready = new Thread::Ready_Queue();
 
 void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
-    db<Thread>(TRC) << "Método thread_exit iniciou execução\n";
-    this->_state = State::FINISHING;
-    Thread::thread_count --;
+    db<Thread>(TRC) << "Método thread_exit iniciou execução";
+    //Correções - Solução do professor
+    this->-state = FINISHING;
+    //thread_exit chama o yield
+    Thread::yield()
+    
+    //
+    // delete this->_context;// Implementar no Destrutor da classe
+    // Thread::thread_count --; // Implementar no dispatcher
+    
 }
 
 /*
@@ -28,39 +32,41 @@ int Thread::id() {
 };
 
 void Thread::init(void (*main)(void *)) {
-    db<Thread>(TRC) << "Método Thread::init iniciou execução\n";
+    db<Thread>(TRC) << "Método Thread::init iniciou execução";
 
     //Criação de adição de casting para as funções, além de adicionar uma string ao final para obedecer a chamada da função
+    // Criação das threads para que vazamento de memória não ocorra
+    new (&_main) Thread(main, (void *) "main");
+    new (&_dispatcher) Thread((void (*) (void*)) &Thread::dispatcher, (void*) NULL);
 
-    //Preciso incrementar o thread_count aqui?
-    Thread* main_thread = new Thread((void(*)(char*)) main, (char*) "Thread Main");
-    Thread* dispatcher_thread = new Thread((void(*)(char*)) Thread::dispatcher, (char*) "Thread Dispatcher");
+    // Como inserir ele na fila usando o _link? 
+    //_ready.insert()
+
+    //Fazer assim dá ruim e pode dar vazamento de memória
+    // Thread* main_thread = new Thread((void(*)(char*)) main, (char*) "Thread Main");
+    // Thread* dispatcher_thread = new Thread((void(*)(char*))Thread::dispatcher, (char*) "Thread Dispatcher");
+
+    _running = & _main;
+
+    _main._state = State::RUNNING;
+    new (&_main_context) CPU::Context();
+
     
-    // Inicialização dos atributos _dispatcher e _main
-    Thread::_dispatcher = *dispatcher_thread;
-    Thread::_main = *main_thread;
-
-    //Inicialização do atributo lista _ready
-    Thread::_ready = Thread::Ready_Queue();
-
-    //Inicialização do atributo contexto
-    Thread::_main_context = *Thread::_main._context;
-
-    //Atualização do _running para main
-    Thread::_running = main_thread;
-
-
+    
     // Troca de CONTEXTO, criação de um contexto vazio para realizar a troca
-    Context* mock_context = new CPU::Context();
-    CPU::switch_context(mock_context, main_thread->_context);
+    //Context* mock_context = new CPU::Context();
+    //Perguntar qual é o prev nesse contexto
+    //CPU::switch_context(mock_context, main_thread->_context);
 };
 
 void Thread::dispatcher() {
-    db<Thread>(TRC) << "Thread dispatcher iniciou execução\n";
+    //Utilizar o contador de threads dentro do dispatcher
+    db<Thread>(TRC) << "Thread dispatcher iniciou execução";
     //TODO:Ajustes de sintaxe/
-    while (thread_count>0){ //Enquanto ouverem Threads de usuário//
+    //Correções
+    while (thread_count>2){ //Enquanto ouverem Threads de usuário//
         
-        db<Thread>(TRC) << "Thread dispatcher vai escolher uma nova thread\n";
+        
         Ready_Queue::Element* next_element = Thread::_ready.head(); 
         Thread* next_thread = next_element->object(); // Pegar o objeto Thread de dentro do elemento
         Thread::_dispatcher._state = State::READY; //Estado da next_thread alterado para ready
@@ -69,24 +75,18 @@ void Thread::dispatcher() {
         Thread::_running= next_thread; 
         next_thread->_state = State::RUNNING;
         //remover next_thread da fila se tiver acabdo
-        CPU::switch_context(Thread::_dispatcher._context, next_thread->_context);
         if (next_thread->_state == State::FINISHING){
-            Thread::_ready.remove(next_element);
+            Thread::_ready.remove_head();
         }
+
+        CPU::switch_context(Thread::_dispatcher._context,next_thread->_context);
+ 
     };
 
     Thread::_dispatcher._state = State::FINISHING; //Dispatcher em finishing
     Thread::_ready.remove(&Thread::_dispatcher._link); //Remover dispatcher da fila
+    CPU::switch_context(Thread::_dispatcher._context, &Thread::_main_context); //Troca de contexto para main
 
-    CPU::switch_context(Thread::_dispatcher._context, Thread::_main._context); //Troca de contexto para main
-
-}
-
-//Destrutor da classe
-Thread::~Thread() {
-    if (this->_context) {
-        delete this->_context;
-    }
 }
 
 __END_API
