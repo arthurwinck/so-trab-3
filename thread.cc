@@ -14,7 +14,7 @@ void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
     db<Thread>(TRC) << "Método thread_exit iniciou execução";
     //Correções - Solução do professor
-    this->-state = FINISHING;
+    this->_state = FINISHING;
     //thread_exit chama o yield
     Thread::yield()
     
@@ -56,30 +56,45 @@ void Thread::init(void (*main)(void *)) {
     // Troca de CONTEXTO, criação de um contexto vazio para realizar a troca
     //Context* mock_context = new CPU::Context();
     //Perguntar qual é o prev nesse contexto
-    //CPU::switch_context(mock_context, main_thread->_context);
+    CPU::switch_context(mock_context, main_thread->_context);
 };
 
 void Thread::dispatcher() {
     //Utilizar o contador de threads dentro do dispatcher
     db<Thread>(TRC) << "Thread dispatcher iniciou execução";
     //TODO:Ajustes de sintaxe/
-    //Correções
+    //Correções -> Checar enquanto thread_count for maior que 2
     while (thread_count>2){ //Enquanto ouverem Threads de usuário//
         
+        //Errado - 
+        //Ready_Queue::Element* next_element = Thread::_ready.head(); 
         
-        Ready_Queue::Element* next_element = Thread::_ready.head(); 
-        Thread* next_thread = next_element->object(); // Pegar o objeto Thread de dentro do elemento
-        Thread::_dispatcher._state = State::READY; //Estado da next_thread alterado para ready
-        Thread::_ready.insert_head(&Thread::_dispatcher._link); //Insere dispatcher no Ready_Queue
-        //Definir a next_thread como a thread rodando
-        Thread::_running= next_thread; 
-        next_thread->_state = State::RUNNING;
-        //remover next_thread da fila se tiver acabdo
-        if (next_thread->_state == State::FINISHING){
-            Thread::_ready.remove_head();
+        Ready_Queue::Element* next_element = _ready.head();
+
+        //Iterar sobre a lista até encontrar uma thread que n seja a dispatcher
+        while (next_element->object()->_id != 1) {
+            // Talvez n seja o melhor jeito, revisar outros métodos de list
+            Ready_Queue::Element* next_element = next_element->next();
         }
 
-        CPU::switch_context(Thread::_dispatcher._context,next_thread->_context);
+        _dispatcher._state = State::READY; //Estado da next_thread alterado para ready
+        _ready.insert(&_dispatcher._link); //Insere dispatcher no Ready_Queue
+        
+        Thread* next_thread = next_element->object(); // Pegar o objeto Thread de dentro do elemento
+        _running= next_thread; //Definir a next_thread como a thread rodando 
+        
+        //remover next_thread da fila se tiver acabdo
+        //Verificar lógica de testar o finishing
+        if (next_thread->_state == State::FINISHING){
+            //Não atualizar timestamp
+            // Dispatcher não pode escolher thread com estado finishing, remove da lista
+            Thread::_ready.remove_head();
+        } else {
+            next_thread->_state = State::RUNNING;
+        }
+
+        // Executar o switch_context da thread
+        switch_context((&_dispatcher), next_thread);
  
     };
 
