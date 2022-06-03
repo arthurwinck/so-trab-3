@@ -106,13 +106,13 @@ void Thread::dispatcher() {
     db<Thread>(TRC) << "Thread dispatcher está terminando\n";
     Thread::_dispatcher._state = State::FINISHING; //Dispatcher em finishing
     Thread::_ready.remove(&Thread::_dispatcher._link); //Remover dispatcher da fila
-    CPU::switch_context(Thread::_dispatcher._context, &Thread::_main_context); //Troca de contexto para main
+    Thread::switch_context(&Thread::_dispatcher, &Thread::_main); //Troca de contexto para main
 
 }
 
 Thread::~Thread() {
     int id = this->id();
-    //db<Thread>(TRC) << "Desconstrutor da thread:" << id <<"\n";
+    db<Thread>(TRC) << "Desconstrutor da thread:" << id <<"\n";
     if (this->_context) {
         delete this->_context;
     }
