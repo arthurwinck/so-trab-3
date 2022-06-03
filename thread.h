@@ -112,6 +112,7 @@ public:
             prev->_state = READY;
             int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
             prev->_link.rank(now);
+            db<Thread>(TRC) << "ID da Thread com timestamp atualizado:" << (*prev).id() << "\n";
         }
 
         if (prev != &_main) {
