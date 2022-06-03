@@ -9,6 +9,10 @@ int unsigned Thread::thread_count = 0;
 // que está rodando
 Thread* Thread::_running = 0;
 Thread::Ready_Queue Thread::_ready;
+Thread Thread::_dispatcher;
+Thread Thread::_main;
+CPU::Context Thread::_main_context;
+
 
 void Thread::thread_exit(int exit_code) {
     //Implementação da destruição da thread
@@ -16,7 +20,7 @@ void Thread::thread_exit(int exit_code) {
     //Correções - Solução do professor
     this->_state = FINISHING;
     //thread_exit chama o yield
-    Thread::yield()
+    Thread::yield();
     
     //
     // delete this->_context;// Implementar no Destrutor da classe
@@ -55,8 +59,7 @@ void Thread::init(void (*main)(void *)) {
     
     // Troca de CONTEXTO, criação de um contexto vazio para realizar a troca
     //Context* mock_context = new CPU::Context();
-    //Perguntar qual é o prev nesse contexto
-    CPU::switch_context(mock_context, main_thread->_context);
+    CPU::switch_context(&_main_context, _main._context);
 };
 
 void Thread::dispatcher() {
@@ -102,6 +105,10 @@ void Thread::dispatcher() {
     Thread::_ready.remove(&Thread::_dispatcher._link); //Remover dispatcher da fila
     CPU::switch_context(Thread::_dispatcher._context, &Thread::_main_context); //Troca de contexto para main
 
+}
+
+Thread::~Thread() {
+    delete this->_context;
 }
 
 __END_API
